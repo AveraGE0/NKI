@@ -1,3 +1,12 @@
+/data/*
+!/data/.gitkeep
+
+/pysr_results/*
+!/pysr_results/.gitkeep
+
+/pysr_temp/*
+!/pysr_temp/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
