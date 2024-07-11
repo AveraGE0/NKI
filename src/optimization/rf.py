@@ -5,14 +5,52 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
+import pandas as pd
 import joblib
 import json
 
 
+def split_train_val(df, id_col, seq_col, val_ratio=0.2):
+    train_dfs = []
+    val_dfs = []
+
+    for id_val, group in df.groupby(id_col):
+        n_val_samples = int(len(group) * val_ratio)
+        train_df = group.iloc[:-n_val_samples]
+        val_df = group.iloc[-n_val_samples:]
+        train_dfs.append(train_df)
+        val_dfs.append(val_df)
+
+    train_df = pd.concat(train_dfs).reset_index(drop=True)
+    val_df = pd.concat(val_dfs).reset_index(drop=True)
+
+    return train_df, val_df
+
+
+ignore_columns = []
+target_column = "CTCAE"
 # Load dataset
-data = load_breast_cancer()
-X, y = data.data, data.target
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
+test_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
+
+# Drop any unnamed columns in the dataframe
+train_data = train_data.loc[:, ~train_data.columns.str.contains('^Unnamed')]
+train_full = train_data.copy()
+train_data, val_data = split_train_val(train_data, id_col='pat_id', seq_col='week_identifier', val_ratio=0.2)
+test_data = test_data.loc[:, ~test_data.columns.str.contains('^Unnamed')]
+
+# Split into features and target
+X_train = train_data.drop(columns=[target_column])
+y_train = train_data[target_column]
+
+X_val = val_data.drop(columns=[target_column])
+y_val = val_data[target_column]
+
+X_train_full = train_full.drop(columns=[target_column])
+y_train_full = train_full[target_column]
+
+X_test = test_data.drop(columns=[target_column])
+y_test = test_data[target_column]
 
 # Define the objective function
 def objective(trial):
@@ -63,16 +101,16 @@ for key, value in trial.params.items():
 # Train the final model with the best hyperparameters
 best_params = study.best_params
 best_model = RandomForestRegressor(**best_params, random_state=42)
-best_model.fit(X_train, y_train)
+best_model.fit(X_train_full, y_train_full)
 
 # Save the final model using joblib with compression
 joblib.dump(best_model, './models/best_rf_model.pkl', compress=3)
 
-# Evaluate the final model on the validation set
-y_pred = best_model.predict(X_val)
-mse = mean_squared_error(y_val, y_pred)
-mae = mean_absolute_error(y_val, y_pred)
-r2 = r2_score(y_val, y_pred)
+# Evaluate the final model on the test set
+y_pred = best_model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
 
 # Print the evaluation metrics
 print('Validation set MSE:', mse)
