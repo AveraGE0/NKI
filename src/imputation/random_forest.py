@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.experimental import enable_iterative_imputer  # noqa
 from sklearn.impute import IterativeImputer
 import pandas as pd
+import joblib
 
 
 class RandomForestImputation(ImputationMethod, Trainable):
@@ -26,3 +27,9 @@ class RandomForestImputation(ImputationMethod, Trainable):
 
     def impute(self, data):
         return self.imputer.transform(data)
+
+    def _save(self, model_path):
+        joblib.dump(self.imputer, model_path, compress=3)
+
+    def _load(self, model_path):
+        self.imputer = joblib.load(model_path)

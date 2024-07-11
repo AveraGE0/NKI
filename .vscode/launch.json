@@ -5,6 +5,61 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "CLI eval EBM",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli.evaluate_model",
+            "args": [
+                "./data/train_data.csv",
+                "./data/test_data.csv",
+                "temp_sk1",
+                "RF",
+                "./results",
+                "--ignore_columns", "date", "id",
+            ]
+        },
+        {
+            "name": "CLI imputation test (model load)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli.impute",
+            "args": [
+                "./data/example_imputation_data_test.csv",
+                "example_imputed_test.csv",
+                "--grouping_columns", "id",
+                "--ignore_columns", "date", "id",
+                "--methods", "RF",
+                "--load_imputed_model", "./impute_models"
+            ]
+        },
+        {
+            "name": "CLI imputation train (model train)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli.impute",
+            "args": [
+                "./data/example_imputation_data.csv",
+                "example_imputed_train.csv",
+                "--grouping_columns", "id",
+                "--ignore_columns", "date", "id",
+                "--methods", "RF",
+                "--save_model_dir", "./impute_models"
+            ]
+        },
+        {
+            "name": "CLI imputation",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli.impute",
+            "args": [
+                "./data/example_imputation_data.csv",
+                "example_imputed.csv",
+                "--grouping_columns", "id",
+                "--ignore_columns", "date", "id",
+                "--methods", "RF"
+            ]
+        },
+        {
             "name": "CLI imputation evaluation",
             "type": "debugpy",
             "request": "launch",
@@ -14,8 +69,8 @@
                 "--grouping_columns", "id",
                 "--ignore_columns", "date", "id",
                 "--test_drop_amount", "0.1",
-                "--tested_sequence_lengths", "1",
-                "--methods", "LINEAR", "RF"
+                "--tested_sequence_lengths", "1", "40", "100",
+                "--methods", "LINEAR", "RF", "MICE", "KNN"
             ]
         },
         {

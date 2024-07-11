@@ -2,7 +2,7 @@ from .interpolation import LinearImputation
 from .random_forest import RandomForestImputation
 from src.imputation.mice import RandomForestIterativeImputation
 from src.imputation.knn import KNNImputation
-from src.imputation.imputation import ImputationEvaluation
+from src.imputation.imputation import ImputationEvaluation, Trainable
 
 
 __all__ = [
@@ -10,5 +10,6 @@ __all__ = [
     'RandomForestImputation',
     'RandomForestIterativeImputation',
     'KNNImputation',
-    'ImputationEvaluation'
+    'ImputationEvaluation',
+    'Trainable'
     ]

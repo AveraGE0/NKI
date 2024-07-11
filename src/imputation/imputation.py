@@ -3,6 +3,8 @@ https://scikit-learn.org/stable/auto_examples/impute/plot_iterative_imputer_vari
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 from logging import getLogger
+import joblib
+import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -52,6 +54,26 @@ class Trainable(ABC):
         Raises:
             NotImplementedError: Abstract method, has to be overwritten.
         """
+        raise NotImplementedError
+    
+    def save_model(self, save_model_dir, model_name, exist_ok=True):
+        if save_model_dir:
+            os.makedirs(save_model_dir, exist_ok=exist_ok)
+            model_path = os.path.join(save_model_dir, model_name)
+            self._save(model_path)
+            print(f"Model saved to {model_path}")
+
+    def load_model(self, model_path):
+        if model_path and os.path.exists(model_path):
+            self._load(model_path + (".joblib" if not model_path.endswith(".joblib") else ""))
+            print(f"Model loaded from {model_path}")
+        else:
+            raise FileNotFoundError(f"Model file {model_path} does not exist.")
+
+    def _save(self, model_path):
+        raise NotImplementedError
+
+    def _load(self, model_path):
         raise NotImplementedError
 
 
@@ -119,6 +141,8 @@ class ImputationEvaluation:
         # the cells dropped is an upper bound, since we do not sample without replacement!
         cells_dropped = int(len(group_df)*len(impute_columns)* self.test_drop_amount)
         drops_per_column = int((cells_dropped / len(impute_columns)) / sequence_length)
+        if drops_per_column == 0:
+            logger.warning("CAUTION, drops per columns are 0, please increase the percentage of dropped values.")
         # we generate starting points for the sequences that have at least one point between them
         # we can generate sequences for each column
         row_drop_indices = np.empty(shape=(0,), dtype=np.int32)
@@ -188,6 +212,10 @@ class ImputationEvaluation:
 
             y = np.array(list(original_group_values.values()))
             y_imputed = np.array([df_imputed[coord] for coord in original_group_values.keys()])
+            
+            # Sanity check
+            assert np.isnan(y).sum() == 0, "Error, some of the original values contain NaN values."
+            assert np.isnan(y_imputed).sum() == 0, "Error, some of the imputed values contain NaN values."
 
             mae = np.abs(y - y_imputed).mean()
             mse = ((y - y_imputed) ** 2).mean()
@@ -222,6 +250,7 @@ class ImputationEvaluation:
         df_results = self.initialize_results(models, self.tested_sequence_lengths)
         # Columns that are actually imputed
         impute_columns = self.get_impute_columns()
+        group_scores = []
 
         # group data in case we have grouping columns (groups are individually imputed)
         if self.grouping_columns:
@@ -245,7 +274,7 @@ class ImputationEvaluation:
             group_mse_list = {model.name: [] for model in models}
             group_n_imputed_list = {model.name: [] for model in models}
 
-            for _, group_df in grouped:
+            for group_name, group_df in grouped:
                 df_dropped, original_values = self.drop_values(group_df, sequence_length)
                 group_mae, group_mse, group_n_imputed = self.process_group(
                     df_dropped,
@@ -259,6 +288,17 @@ class ImputationEvaluation:
                     group_mae_list[model_name].extend(group_mae[model_name])
                     group_mse_list[model_name].extend(group_mse[model_name])
                     group_n_imputed_list[model_name].extend(group_n_imputed[model_name])
+                # update group scores
+                for model_name in group_mae.keys():
+                    for i in range(len(group_mae[model_name])):
+                        group_scores.append({
+                            'group_name': group_name,
+                            'model_name': model_name,
+                            'seq_len': sequence_length,
+                            'mae': group_mae[model_name][i],
+                            'mse': group_mse[model_name][i],
+                            'n_imputed': group_n_imputed[model_name][i]
+                        })
 
             self.update_results(
                 df_results,
@@ -268,16 +308,9 @@ class ImputationEvaluation:
                 group_mse_list,
                 group_n_imputed_list
             )
-        progress_bar.close()
-        # save group scores individually
-        group_scores = dict()
-        for i, group_name in enumerate(grouped.groups.keys()):
-            group_scores[group_name] = {
-                model.name: {
-                    "mse": group_mse_list[model.name][i],
-                    "mae": group_mae_list[model.name][i]
-                } for model in models}
-        self.groupwise_results = group_scores
+            progress_bar.close()
+        
+        self.groupwise_results = df_results = pd.DataFrame(group_scores)
         self.results = df_results
 
     def get_groupwise_results(self) -> dict:

@@ -59,17 +59,17 @@ def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0
     # I will accept this
     cells_dropped = int(n_samples*len(columns)*missing_data)
     row_drop_indices = np.random.randint(low=0, high=n_samples, size=cells_dropped)
-    column_drop_indices = np.random.randint(low=0, high=len(columns), size=cells_dropped)
+    column_drop_indices = np.random.randint(low=2, high=len(columns)+2, size=cells_dropped)
     for i_row, i_col in zip(row_drop_indices, column_drop_indices):
         df_data.iat[i_row, i_col] = np.nan
     return df_data
 
 
 if __name__ == "__main__":
-    df_fake = create_example_corsano_data(10000)  #, missing_data=0.01)
+    df_fake = create_example_corsano_data(10000, missing_data=0.5)
     print(
         "Actual NAs: "\
         f"{sum(df_fake.isnull().sum())} "\
         f"({sum(df_fake.isnull().sum())/(len(df_fake)*len(df_fake.columns))}%)"
     )
-    df_fake.to_csv("./data/example_data.csv")
+    df_fake.to_csv("./data/example_imputation_data_test.csv")
