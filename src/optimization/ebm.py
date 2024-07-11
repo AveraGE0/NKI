@@ -24,7 +24,7 @@ def split_train_val(df, id_col, seq_col, val_ratio=0.2):
     
     return train_df, val_df
 
-ignore_columns = []
+ignore_columns = ["dateTime"]
 target_column = "CTCAE"
 # Load dataset
 train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
@@ -89,7 +89,7 @@ for key, value in trial.params.items():
 
 # Train the final model with the best hyperparameters
 best_params = study.best_params
-best_model = ExplainableBoostingRegressor(**best_params, random_state=42)
+best_model = ExplainableBoostingRegressor(**best_params, random_state=42, feature_names = X_train_full.columns.tolist())
 best_model.fit(X_train_full, y_train_full)
 # Save the final model using joblib with compression
 joblib.dump(best_model, './models/best_ebm_model.pkl', compress=3)
@@ -121,13 +121,13 @@ with open('./results/metrics_ebm.json', 'w', encoding="utf-8") as f:
     json.dump(metrics, f)
 
 # Plot feature contributions for EBM
-from interpret import show
-import matplotlib.pyplot as plt
+#from interpret import show
+#import matplotlib.pyplot as plt
 
-ebm_global = best_model.explain_global(name='EBM Feature Importances')
+#ebm_global = best_model.explain_global(name='EBM Feature Importances')
 
 # Render the plot
-fig = show(ebm_global)
+f#ig = show(ebm_global)
 
 # Save the plot to the filesystem
-fig.write_image("./plots/ebm_feature_contributions.png")
+f#ig.write_image("./plots/ebm_feature_contributions.png")

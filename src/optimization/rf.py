@@ -9,6 +9,7 @@ import pandas as pd
 import joblib
 import json
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
 
 
 def split_train_val(df, id_col, seq_col, val_ratio=0.2):
@@ -38,8 +39,10 @@ categorical_columns = ["pat_id", "site", "diagnosis"]
 train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
 test_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
 # Convert categorical columns to 'category' dtype
-train_data[categorical_columns] = train_data[categorical_columns].astype('category')
-test_data[categorical_columns] = test_data[categorical_columns].astype('category')
+le = LabelEncoder()
+for col in categorical_columns:
+    train_data[col] = le.fit_transform(train_data[col])
+    test_data[col] = le.fit_transform(test_data[col])
 # Drop any unnamed columns in the dataframe
 train_data = train_data.loc[:, ~train_data.columns.str.contains('^Unnamed')]
 train_full = train_data.copy()

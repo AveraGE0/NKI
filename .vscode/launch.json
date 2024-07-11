@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "EBM vis",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.plot"
+        },
+        {
             "name": "EBM optimization",
             "type": "debugpy",
             "request": "launch",
