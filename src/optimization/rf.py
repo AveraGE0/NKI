@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import joblib
 import json
-from matplotlib.pyplot import plt
+import matplotlib.pyplot as plt
 
 
 def split_train_val(df, id_col, seq_col, val_ratio=0.2):
@@ -31,7 +31,7 @@ def split_train_val(df, id_col, seq_col, val_ratio=0.2):
 ignore_columns = ["dateTime"]
 target_column = "CTCAE"
 # Identify categorical columns
-categorical_columns = ['category1', 'category2']
+categorical_columns = ["pat_id", "site", "diagnosis"]
 
 
 # Load dataset
