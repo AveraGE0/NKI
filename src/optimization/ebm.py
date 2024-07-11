@@ -119,3 +119,15 @@ metrics = {
 }
 with open('./results/metrics_ebm.json', 'w', encoding="utf-8") as f:
     json.dump(metrics, f)
+
+# Plot feature contributions for EBM
+from interpret import show
+import matplotlib.pyplot as plt
+
+ebm_global = best_model.explain_global(name='EBM Feature Importances')
+
+# Render the plot
+fig = show(ebm_global)
+
+# Save the plot to the filesystem
+fig.write_image("./plots/ebm_feature_contributions.png")

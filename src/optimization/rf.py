@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import joblib
 import json
+from matplotlib.pyplot import plt
 
 
 def split_train_val(df, id_col, seq_col, val_ratio=0.2):
@@ -27,12 +28,18 @@ def split_train_val(df, id_col, seq_col, val_ratio=0.2):
     return train_df, val_df
 
 
-ignore_columns = []
+ignore_columns = ["dateTime"]
 target_column = "CTCAE"
+# Identify categorical columns
+categorical_columns = ['category1', 'category2']
+
+
 # Load dataset
 train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
 test_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
-
+# Convert categorical columns to 'category' dtype
+train_data[categorical_columns] = train_data[categorical_columns].astype('category')
+test_data[categorical_columns] = test_data[categorical_columns].astype('category')
 # Drop any unnamed columns in the dataframe
 train_data = train_data.loc[:, ~train_data.columns.str.contains('^Unnamed')]
 train_full = train_data.copy()
@@ -125,3 +132,16 @@ metrics = {
 }
 with open('./results/rf_metrics.json', 'w', encoding="utf-8") as f:
     json.dump(metrics, f)
+
+# Plot feature importance for Random Forest
+importances = best_model.feature_importances_
+indices = np.argsort(importances)[::-1]
+features = np.array(list(X_train.columns))
+
+plt.figure()
+plt.title("Feature Importances (Random Forest)")
+plt.bar(range(X_train.shape[1]), importances[indices], align="center")
+plt.xticks(range(X_train.shape[1]), features[indices], rotation=90)
+plt.xlim([-1, X_train.shape[1]])
+plt.tight_layout()
+plt.savefig('./plots/rf_feature_importance.png')
