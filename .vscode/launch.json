@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "EBM optimization",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.optimization.ebm"
+        },
+        {
+            "name": "RF optimization",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.optimization.rf"
+        },
+        {
             "name": "CLI eval EBM",
             "type": "debugpy",
             "request": "launch",
