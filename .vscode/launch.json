@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Scatter plots",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.analysis.scatter_matrix"
+        },
+        {
             "name": "EBM vis",
             "type": "debugpy",
             "request": "launch",

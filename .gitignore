@@ -7,6 +7,18 @@
 /pysr_temp/*
 !/pysr_temp/.gitkeep
 
+/models/*
+!/models/.gitkeep
+
+/impute_models/*
+!/impute_models/.gitkeep
+
+/plots/*
+!/plots/.gitkeep
+
+/results/*
+!/results/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

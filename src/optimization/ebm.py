@@ -1,7 +1,5 @@
 import optuna
 from interpret.glassbox import ExplainableBoostingRegressor
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 import pandas as pd
@@ -24,11 +22,16 @@ def split_train_val(df, id_col, seq_col, val_ratio=0.2):
     
     return train_df, val_df
 
-ignore_columns = ["dateTime"]
+categorical_columns = ["pat_id", "sex", "smoker", "drinker"]
+ignore_columns = ["dateTime", "week_indicator"]
 target_column = "CTCAE"
 # Load dataset
 train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
-test_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
+test_data = pd.read_csv("./data/test_imputed_agg_stats.csv").drop(columns=ignore_columns)
+
+for col in categorical_columns:
+    train_data[col] = train_data[col].astype(str)
+    test_data[col] = test_data[col].astype(str)
 
 # Drop any unnamed columns in the dataframe
 train_data = train_data.loc[:, ~train_data.columns.str.contains('^Unnamed')]
@@ -94,29 +97,45 @@ best_model.fit(X_train_full, y_train_full)
 # Save the final model using joblib with compression
 joblib.dump(best_model, './models/best_ebm_model.pkl', compress=3)
 
-y_pred = best_model.predict(X_test)
+# make predictions
+y_pred_train = best_model.predict(X_train)
+y_pred_test = best_model.predict(X_test)
+
+# calculate scores
+train_mse = mean_squared_error(y_train, y_pred_train)
+train_mae = mean_absolute_error(y_train, y_pred_train)
+train_r2 = r2_score(y_train, y_pred_train)
 
 # Calculate evaluation metrics
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-# Exclude zero target values for MAPE calculation
-non_zero_mask = y_test != 0
-mape = np.mean(np.abs((y_test[non_zero_mask] - y_pred[non_zero_mask]) / y_test[non_zero_mask])) * 100
-r2 = r2_score(y_test, y_pred)
+test_mse = mean_squared_error(y_test, y_pred_test)
+test_mae = mean_absolute_error(y_test, y_pred_test)
+test_r2 = r2_score(y_test, y_pred_test)
 
 # Print the evaluation metrics
-print('Test set MSE:', mse)
-print('Test set MAE:', mae)
-print('Test set MAPE:', mape)
-print('Test set R2:', r2)
+print('Test set MSE:', test_mse)
+print('Test set MAE:', test_mae)
+print('Test set R2:', test_r2)
 
+# Print the evaluation metrics
+print('Train set MSE:', train_mse)
+print('Train set MAE:', train_mae)
+print('Train set R2:', train_r2)
 # Save the evaluation metrics to a file
 metrics = {
-    'MSE': mse,
-    'MAE': mae,
-    'MAPE': mape,
-    'R2': r2
+    'Train_MSE': train_mse,
+    'Train_MAE': train_mae,
+    'Train_R2': train_r2,
+    'Test_MSE': test_mse,
+    'Test_MAE': test_mae,
+    'Test_R2': test_r2
 }
+
+predictions = pd.DataFrame({
+    'y_test': y_test,
+    'y_pred': y_pred_test
+})
+predictions.to_csv('./results/ebm_predictions.csv', index=False)
+
 with open('./results/metrics_ebm.json', 'w', encoding="utf-8") as f:
     json.dump(metrics, f)
 
@@ -127,7 +146,7 @@ with open('./results/metrics_ebm.json', 'w', encoding="utf-8") as f:
 #ebm_global = best_model.explain_global(name='EBM Feature Importances')
 
 # Render the plot
-f#ig = show(ebm_global)
+#fig = show(ebm_global)
 
 # Save the plot to the filesystem
-f#ig.write_image("./plots/ebm_feature_contributions.png")
+#fig.write_image("./plots/ebm_feature_contributions.png")

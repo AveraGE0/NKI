@@ -1,8 +1,5 @@
 import optuna
-from sklearn.datasets import load_breast_cancer
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 import pandas as pd
@@ -37,7 +34,7 @@ categorical_columns = ["pat_id", "site", "diagnosis"]
 
 # Load dataset
 train_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
-test_data = pd.read_csv("./data/train_imputed_agg_stats.csv").drop(columns=ignore_columns)
+test_data = pd.read_csv("./data/test_imputed_agg_stats.csv").drop(columns=ignore_columns)
 # Convert categorical columns to 'category' dtype
 le = LabelEncoder()
 for col in categorical_columns:
@@ -117,22 +114,44 @@ best_model.fit(X_train_full, y_train_full)
 joblib.dump(best_model, './models/best_rf_model.pkl', compress=3)
 
 # Evaluate the final model on the test set
-y_pred = best_model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+# make predictions
+y_pred_train = best_model.predict(X_train)
+y_pred_test = best_model.predict(X_test)
+
+# calculate scores
+train_mse = mean_squared_error(y_train, y_pred_train)
+train_mae = mean_absolute_error(y_train, y_pred_train)
+train_r2 = r2_score(y_train, y_pred_train)
+
+# Calculate evaluation metrics
+test_mse = mean_squared_error(y_test, y_pred_test)
+test_mae = mean_absolute_error(y_test, y_pred_test)
+test_r2 = r2_score(y_test, y_pred_test)
 
 # Print the evaluation metrics
-print('Validation set MSE:', mse)
-print('Validation set MAE:', mae)
-print('Validation set R2:', r2)
+print('Test set MSE:', test_mse)
+print('Test set MAE:', test_mae)
+print('Test set R2:', test_r2)
 
+# Print the evaluation metrics
+print('Train set MSE:', train_mse)
+print('Train set MAE:', train_mae)
+print('Train set R2:', train_r2)
 # Save the evaluation metrics to a file
 metrics = {
-    'MSE': mse,
-    'MAE': mae,
-    'R2': r2
+    'Train_MSE': train_mse,
+    'Train_MAE': train_mae,
+    'Train_R2': train_r2,
+    'Test_MSE': test_mse,
+    'Test_MAE': test_mae,
+    'Test_R2': test_r2
 }
+
+predictions = pd.DataFrame({
+    'y_test': y_test,
+    'y_pred': y_pred_test
+})
+predictions.to_csv('./results/rf_predictions.csv', index=False)
 with open('./results/rf_metrics.json', 'w', encoding="utf-8") as f:
     json.dump(metrics, f)
 
