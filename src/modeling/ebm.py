@@ -105,9 +105,9 @@ for eval_set_name, X, y in [
     with open(f'./models/{model_name}/{eval_set_name}_between_patients.json', 'w', encoding="utf-8") as f:
         json.dump(df_between_patient_errors, f)
     # variation within cancer types
-    #df_within_cancer_errors = groupwise_errors(df_data, "actual", "predicted", ["diagnosis"])
-    #with open(f'./models/{model_name}/{eval_set_name}_cancer_prediction_variation.json', 'w', encoding="utf-8") as f:
-    #    json.dump(df_within_cancer_errors, f)
+    df_within_cancer_errors = groupwise_errors(df_data, "actual", "predicted", ["diagnosis"])
+    with open(f'./models/{model_name}/{eval_set_name}_cancer_prediction_variation.json', 'w', encoding="utf-8") as f:
+        json.dump(df_within_cancer_errors, f)
     
     # calculate scores
     metrics.update({
