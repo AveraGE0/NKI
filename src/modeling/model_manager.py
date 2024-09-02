@@ -35,6 +35,12 @@ def create_model_directory(model_name: str, model_description: dict) -> None:
     return
 
 
+def add_description(description_path: str, headline: str, content: str) -> None:
+    with open(description_path, mode="a+", encoding="utf-8") as description_file:
+        description_file.write(f"## {headline}\n\n")
+        description_file.write(f"{content}\n\n")
+
+
 def get_model_performance_list(model_type: str, metric_file_names: list[str]) -> pd.DataFrame:
     """Function to receive a DataFrame with name and score
     of all available models

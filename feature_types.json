@@ -1,0 +1,7 @@
+{
+    "feature_types": {
+        "pat_id": "categorical",
+        "age": "continuous",
+        "gender": "categorical"
+    }
+}

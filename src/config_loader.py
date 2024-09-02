@@ -1,6 +1,6 @@
 import os
 import configparser
-
+import json
 # Load the configuration file
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -19,6 +19,14 @@ if not ignore_columns:
 
 target_column = config["data"]["target_column"]
 
+# Load configuration from JSON file
+with open('feature_types.json', 'r', encoding="utf-8") as config_file:
+    feature_types = json.load(config_file)
+
+
+def get_feature_types(columns: list[str]):
+    return [feature_types['feature_types'][col] for col in columns]
+# Extract feature types from the configuration
 #if not os.path.isfile(train_path):
 #    raise ValueError(f"The train path specified in the config is invalid: {train_path}")
 #if not os.path.isfile(test_path):

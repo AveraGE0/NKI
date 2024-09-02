@@ -4,7 +4,8 @@ from interpret.glassbox import ExplainableBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from src.evaluation.adjusted_r2 import adjusted_r2_score
 from src.evaluation.model_analysis import plot_errors, plot_predicted_scores, groupwise_errors
-from src.modeling.model_manager import create_model_directory, unique_model_name
+from src.evaluation.plots import pat_eval_plot
+from src.modeling.model_manager import create_model_directory, unique_model_name, add_description
 from src.config_loader import train_path, test_path, categorical_columns, ignore_columns, target_column
 import numpy as np
 import pandas as pd
@@ -79,6 +80,12 @@ model = ExplainableBoostingRegressor(
 )
 
 model.fit(X_train, y_train)
+# save the parameters in the description
+add_description(
+    f'./models/{model_name}/model_description.md',
+    headline="Parameters",
+    content='\n'.join(f'{key}: {value}' for key, value in model.get_params().items())
+)
 
 # Save the final model using joblib with compression
 joblib.dump(model, f'./models/{model_name}/best_ebm_model.pkl', compress=3)
@@ -96,6 +103,11 @@ for eval_set_name, X, y in [
     df_data["predicted"] = y_pred
     df_data["onegroup"] = 1
 
+    selected = ["pat_id", "actual", "predicted"]
+    if "diagnosis" in df_data.columns:
+        selected += ["diagnosis"]
+
+    df_data[selected].to_csv(f'./models/{model_name}/{eval_set_name}_prediction.csv')
     # variation per patient (within)
     df_within_patient_errors = groupwise_errors(df_data, "actual", "predicted", ["pat_id"])
     with open(f'./models/{model_name}/{eval_set_name}_within_patient.json', 'w', encoding="utf-8") as f:
@@ -105,9 +117,9 @@ for eval_set_name, X, y in [
     with open(f'./models/{model_name}/{eval_set_name}_between_patients.json', 'w', encoding="utf-8") as f:
         json.dump(df_between_patient_errors, f)
     # variation within cancer types
-    df_within_cancer_errors = groupwise_errors(df_data, "actual", "predicted", ["diagnosis"])
-    with open(f'./models/{model_name}/{eval_set_name}_cancer_prediction_variation.json', 'w', encoding="utf-8") as f:
-        json.dump(df_within_cancer_errors, f)
+    #df_within_cancer_errors = groupwise_errors(df_data, "actual", "predicted", ["diagnosis"])
+    #with open(f'./models/{model_name}/{eval_set_name}_cancer_prediction_variation.json', 'w', encoding="utf-8") as f:
+    #    json.dump(df_within_cancer_errors, f)
     
     # calculate scores
     metrics.update({
@@ -119,6 +131,9 @@ for eval_set_name, X, y in [
 
     with open(f'./models/{model_name}/{eval_set_name}_metrics.json', 'w', encoding="utf-8") as f:
         json.dump(metrics, f)
+
+    # create group-wise plots
+    
 
 # Plot feature contributions for EBM
 from interpret import show
@@ -140,3 +155,33 @@ plt.title('EBM Feature Importances')
 # Save the plot to a specific path
 plt.savefig(f'./models/{model_name}/ebm_feature_importances.png')
 plt.close()
+
+with open(f'./models/{model_name}/train_within_patient.json', 'r', encoding="utf-8") as f:
+    train = json.load(f)
+with open(f'./models/{model_name}/val_within_patient.json', 'r', encoding="utf-8") as f:
+    val = json.load(f)
+with open(f'./models/{model_name}/test_within_patient.json', 'r', encoding="utf-8") as f:
+    test = json.load(f)
+
+df_train = pd.DataFrame(train).T
+df_val = pd.DataFrame(val).T
+df_test = pd.DataFrame(test).T
+
+## Combine into a single DataFrame
+df_combined = pd.concat([df_train.add_suffix('_train'),
+                         df_val.add_suffix('_val'),
+                         df_test.add_suffix('_test')], axis=1)
+pat_error_fig = pat_eval_plot(df_combined, x_name="mse", y_name="error_std")
+pat_error_fig.savefig(f'./models/{model_name}/within_patient_error.png')
+
+# plot errors
+df_predictions_test = pd.read_csv(f'./models/{model_name}/test_prediction.csv')
+df_predictions_test["test"] = 1
+df_predictions_train = pd.read_csv(f'./models/{model_name}/train_prediction.csv')
+df_predictions_train["train"] = 1
+
+plot_errors(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
+plot_errors(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')
+
+plot_predicted_scores(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
+plot_predicted_scores(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')
