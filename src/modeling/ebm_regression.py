@@ -6,8 +6,9 @@ from src.evaluation.adjusted_r2 import adjusted_r2_score
 from src.evaluation.model_analysis import plot_errors, plot_predicted_scores, groupwise_errors
 from src.evaluation.plots import pat_eval_plot
 from src.modeling.model_manager import create_model_directory, unique_model_name, add_description
-from src.config_loader import train_path, test_path, categorical_columns, ignore_columns, target_column
-import numpy as np
+from src.config_loader import train_path_regression as train_path
+from src.config_loader import test_path_regression as test_path
+from src.config_loader import categorical_columns, ignore_columns, target_column
 import pandas as pd
 import joblib
 import json
@@ -17,10 +18,10 @@ def split_train_val(df, id_col, seq_col, val_ratio=0.2):
     train_dfs = []
     val_dfs = []
 
-    for id_val, group in df.groupby(id_col):
-        n_val_samples = int(len(group) * val_ratio)
-        train_df = group.iloc[:-n_val_samples]
-        val_df = group.iloc[-n_val_samples:]
+    for _, group in df.groupby(id_col):
+        n_train_samples = max(1, round(len(group) * (1 - val_ratio)))
+        train_df = group.iloc[:n_train_samples]
+        val_df = group.iloc[n_train_samples:]
         train_dfs.append(train_df)
         val_dfs.append(val_df)
 
@@ -146,14 +147,14 @@ feature_names = ebm_global.data()['names']
 importances = ebm_global.data()['scores']
 
 # Create a bar plot using Matplotlib
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 20))
 plt.barh(feature_names, importances)
 plt.xlabel('Importance')
 plt.ylabel('Feature')
 plt.title('EBM Feature Importances')
 
 # Save the plot to a specific path
-plt.savefig(f'./models/{model_name}/ebm_feature_importances.png')
+plt.savefig(f'./models/{model_name}/ebm_feature_importances.png', dpi=300)
 plt.close()
 
 with open(f'./models/{model_name}/train_within_patient.json', 'r', encoding="utf-8") as f:
@@ -173,6 +174,7 @@ df_combined = pd.concat([df_train.add_suffix('_train'),
                          df_test.add_suffix('_test')], axis=1)
 pat_error_fig = pat_eval_plot(df_combined, x_name="mse", y_name="error_std")
 pat_error_fig.savefig(f'./models/{model_name}/within_patient_error.png')
+plt.close()
 
 # plot errors
 df_predictions_test = pd.read_csv(f'./models/{model_name}/test_prediction.csv')
@@ -180,8 +182,8 @@ df_predictions_test["test"] = 1
 df_predictions_train = pd.read_csv(f'./models/{model_name}/train_prediction.csv')
 df_predictions_train["train"] = 1
 
-plot_errors(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/test_{model_name}')
-plot_errors(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/train_{model_name}')
+plot_errors(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
+plot_errors(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')
 
-plot_predicted_scores(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/test_{model_name}')
-plot_predicted_scores(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/train_{model_name}')
+plot_predicted_scores(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
+plot_predicted_scores(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')

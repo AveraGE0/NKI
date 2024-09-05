@@ -6,8 +6,11 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 # Access the configuration values
-train_path = config["paths"]["train"]
-test_path = config["paths"]["test"]
+train_path_regression = config["paths"]["train_regression"]
+test_path_regression = config["paths"]["test_regression"]
+
+train_path_classification = config["paths"]["train_classification"]
+test_path_classification = config["paths"]["test_classification"]
 
 categorical_columns = config["data"]["categorical_columns"]
 if not categorical_columns:

@@ -12,7 +12,7 @@ def generate_random_dates(start_date, end_date, n):
     return pd.to_datetime(np.random.randint(start_u, end_u, n), unit='s').normalize()
 
 
-def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0) -> pd.DataFrame:
+def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0, outcome="regression") -> pd.DataFrame:
     """Function to generate fake data. The data will have a pattern (increasing columns have
     +1 on average), but noise is added (if noise magnitude > 0), which slightly randomizes the
     data. Additionally, to make the data more close to the original, missing data (per rate,
@@ -33,7 +33,7 @@ def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0
 
     # Create ID column
     df_data = pd.DataFrame()
-    df_data['id'] = pd.Series(
+    df_data['pat_id'] = pd.Series(
         random.choices([f"1100{'0' if v<10 else ''}{v}" for v in range(3)], k=n_samples),
         dtype=str
     )
@@ -54,6 +54,13 @@ def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0
     fake_data = fake_data + noise
     df_data = pd.concat([df_data, pd.DataFrame(fake_data, columns=columns)], axis=1)
 
+    # add outcome
+    if outcome == "regression":
+        df_data["outcome"] = 1*df_data["respiration_rate"] + 2*df_data["bpm"] + 3*df_data["temp_sk1"] + noise_magnitude * np.random.randn(n_samples)
+    elif outcome == "classification":
+        df_data["outcome"] = np.random.randint(0, 3, size=(n_samples,))
+    else:
+        raise ValueError("Invalid outcome type received!")
     # note that this is an upper bound, since we might have multiple cells twice in this list
     # since the actual amount of dropped values is not too important (just testing),
     # I will accept this
@@ -66,10 +73,19 @@ def create_example_corsano_data(n_samples, noise_magnitude=0.1, missing_data=0.0
 
 
 if __name__ == "__main__":
-    df_fake = create_example_corsano_data(10000, missing_data=0.5)
+    # regression (not missing)
+    df_fake = create_example_corsano_data(10000)
+    df_fake.to_csv("./data/example_data_regression.csv")
+    
+    # classification (not missing)
+    df_fake = create_example_corsano_data(10000, outcome="classification")
+    df_fake.to_csv("./data/example_data_classification.csv")
+    
+    # with missing
+    #df_fake = create_example_corsano_data(10000, missing_data=0.5)
     print(
         "Actual NAs: "\
         f"{sum(df_fake.isnull().sum())} "\
         f"({sum(df_fake.isnull().sum())/(len(df_fake)*len(df_fake.columns))}%)"
     )
-    df_fake.to_csv("./data/example_imputation_data_test.csv")
+    #df_fake.to_csv("./data/example_imputation_data_test.csv")
