@@ -180,8 +180,8 @@ df_predictions_test["test"] = 1
 df_predictions_train = pd.read_csv(f'./models/{model_name}/train_prediction.csv')
 df_predictions_train["train"] = 1
 
-plot_errors(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
-plot_errors(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')
+plot_errors(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/test_{model_name}')
+plot_errors(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/train_{model_name}')
 
-plot_predicted_scores(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/{model_name}')
-plot_predicted_scores(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/{model_name}')
+plot_predicted_scores(df_predictions_test, "actual", "predicted", "test", model_path=f'./models/test_{model_name}')
+plot_predicted_scores(df_predictions_train, "actual", "predicted", "train", model_path=f'./models/train_{model_name}')
