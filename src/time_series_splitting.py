@@ -73,11 +73,22 @@ def train_test_date_split(
 
 
 if __name__ == '__main__':
-    test_data = pd.read_csv("./data/example_data.csv", index_col=0)
+    # regression
+    test_data = pd.read_csv("./data/example_data_regression.csv", index_col=0)
     data_train, data_test = train_test_date_split(
-        test_data, 0.8, date_column="date", grouping_columns=["id"]
+        test_data, 0.8, date_column="date", grouping_columns=["pat_id"]
     )
 
     out_dir = Path("./data")
-    data_train.to_csv(out_dir / "train_data.csv")
-    data_test.to_csv(out_dir / "test_data.csv")
+    data_train.to_csv(out_dir / "train_data_regression.csv")
+    data_test.to_csv(out_dir / "test_data_regression.csv")
+
+    # classification
+    test_data = pd.read_csv("./data/example_data_classification.csv", index_col=0)
+    data_train, data_test = train_test_date_split(
+        test_data, 0.8, date_column="date", grouping_columns=["pat_id"]
+    )
+
+    out_dir = Path("./data")
+    data_train.to_csv(out_dir / "train_data_classification.csv")
+    data_test.to_csv(out_dir / "test_data_classification.csv")
