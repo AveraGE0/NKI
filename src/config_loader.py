@@ -12,10 +12,14 @@ test_path_regression = config["paths"]["test_regression"]
 categorical_columns_regression = config["data_regression"]["categorical_columns"]
 if not categorical_columns_regression:
     categorical_columns_regression = []
+else:
+    categorical_columns_regression = categorical_columns_regression.split(', ')
 
 ignore_columns_regression = config["data_regression"]["ignore_columns"]
 if not ignore_columns_regression:
     ignore_columns_regression = []
+else:
+    ignore_columns_regression = ignore_columns_regression.split(', ')
 
 target_column_regression = config["data_regression"]["target_column"]
 
@@ -26,10 +30,14 @@ test_path_classification = config["paths"]["test_classification"]
 categorical_columns_classification = config["data_classification"]["categorical_columns"]
 if not categorical_columns_classification:
     categorical_columns_classification = []
+else:
+    categorical_columns_classification = categorical_columns_classification.split(', ')
 
 ignore_columns_classification = config["data_classification"]["ignore_columns"]
 if not ignore_columns_classification:
     ignore_columns_classification = []
+else:
+    ignore_columns_classification = ignore_columns_classification.split(', ')
 
 target_column_classification = config["data_classification"]["target_column"]
 
