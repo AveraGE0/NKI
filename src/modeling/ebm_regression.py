@@ -8,7 +8,9 @@ from src.evaluation.plots import pat_eval_plot
 from src.modeling.model_manager import create_model_directory, unique_model_name, add_description
 from src.config_loader import train_path_regression as train_path
 from src.config_loader import test_path_regression as test_path
-from src.config_loader import categorical_columns, ignore_columns, target_column
+from src.config_loader import categorical_columns_regression as categorical_columns
+from src.config_loader import ignore_columns_regression as ignore_columns
+from src.config_loader import target_column_regression as target_column
 import pandas as pd
 import joblib
 import json

@@ -4,7 +4,9 @@ from src.evaluation.model_analysis import calculate_metrics_per_id, plot_classif
 from src.modeling.model_manager import create_model_directory, unique_model_name, add_description
 from src.config_loader import train_path_classification as train_path
 from src.config_loader import test_path_classification as test_path
-from src.config_loader import categorical_columns, ignore_columns, target_column
+from src.config_loader import categorical_columns_classification as categorical_columns
+from src.config_loader import ignore_columns_classification as ignore_columns
+from src.config_loader import target_column_classification as target_column
 from src.evaluation.plots import pat_eval_classification_plot
 import pandas as pd
 import joblib

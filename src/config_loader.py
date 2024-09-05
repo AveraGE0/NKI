@@ -9,18 +9,29 @@ config.read('config.ini')
 train_path_regression = config["paths"]["train_regression"]
 test_path_regression = config["paths"]["test_regression"]
 
+categorical_columns_regression = config["data_regression"]["categorical_columns"]
+if not categorical_columns_regression:
+    categorical_columns_regression = []
+
+ignore_columns_regression = config["data_regression"]["ignore_columns"]
+if not ignore_columns_regression:
+    ignore_columns_regression = []
+
+target_column_regression = config["data_regression"]["target_column"]
+
+# classification variables
 train_path_classification = config["paths"]["train_classification"]
 test_path_classification = config["paths"]["test_classification"]
 
-categorical_columns = config["data"]["categorical_columns"]
-if not categorical_columns:
-    categorical_columns = []
+categorical_columns_classification = config["data_classification"]["categorical_columns"]
+if not categorical_columns_classification:
+    categorical_columns_classification = []
 
-ignore_columns = config["data"]["ignore_columns"]
-if not ignore_columns:
-    ignore_columns = []
+ignore_columns_classification = config["data_classification"]["ignore_columns"]
+if not ignore_columns_classification:
+    ignore_columns_classification = []
 
-target_column = config["data"]["target_column"]
+target_column_classification = config["data_classification"]["target_column"]
 
 # Load configuration from JSON file
 with open('feature_types.json', 'r', encoding="utf-8") as config_file:
