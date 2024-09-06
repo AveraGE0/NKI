@@ -154,7 +154,7 @@ plt.barh(feature_names, importances)
 plt.xlabel('Importance')
 plt.ylabel('Feature')
 plt.title('EBM Feature Importances')
-
+plt.tight_layout()
 # Save the plot to a specific path
 plt.savefig(f'./models/{model_name}/ebm_feature_importances.png', dpi=300)
 plt.close()
