@@ -7,6 +7,7 @@ from src.config_loader import test_path_classification as test_path
 from src.config_loader import categorical_columns_classification as categorical_columns
 from src.config_loader import ignore_columns_classification as ignore_columns
 from src.config_loader import target_column_classification as target_column
+from src.config_loader import feature_types
 from src.evaluation.plots import pat_eval_classification_plot
 import pandas as pd
 import joblib
@@ -70,7 +71,8 @@ create_model_directory(model_name, {
 # Create the Explainable Boosting Classifier (EBC)
 model = ExplainableBoostingClassifier(
     random_state=42,
-    feature_names=X_train_full.columns.tolist()
+    feature_names=X_train_full.columns.tolist(),
+    feature_types=[feature_types[feature] if feature in feature_types.keys() else None for feature in X_train_full.columns.tolist()]
 )
 
 model.fit(X_train, y_train)

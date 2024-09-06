@@ -11,6 +11,7 @@ from src.config_loader import test_path_regression as test_path
 from src.config_loader import categorical_columns_regression as categorical_columns
 from src.config_loader import ignore_columns_regression as ignore_columns
 from src.config_loader import target_column_regression as target_column
+from src.config_loader import feature_types
 import pandas as pd
 import joblib
 import json
@@ -79,8 +80,10 @@ model = ExplainableBoostingRegressor(
     #min_samples_leaf=min_samples_leaf,
     #max_bins=max_bins,
     random_state=42,
-    feature_names = X_train_full.columns.tolist()
+    feature_names = X_train_full.columns.tolist(),
+    feature_types=[feature_types[feature] if feature in feature_types.keys() else None for feature in X_train_full.columns.tolist()]
 )
+# TODO check if this works
 
 model.fit(X_train, y_train)
 # save the parameters in the description
