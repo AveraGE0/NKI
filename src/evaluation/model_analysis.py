@@ -44,6 +44,9 @@ def plot_predicted_scores(df_data: pd.DataFrame, actual_col: str, prediction_col
     for group in df_data[grouping_col].unique():
         df_group = df_data[df_data[grouping_col] == group]
 
+        # Determine the overall min and max values for both axes
+        min_val = min(df_group[actual_col].min(), df_group[prediction_col].min())
+        max_val = max(df_group[actual_col].max(), df_group[prediction_col].max())
         # Create a figure with a GridSpec to manage the subplots
         fig = plt.figure(figsize=(8, 8))
         gs = GridSpec(4, 4, figure=fig)
@@ -54,7 +57,12 @@ def plot_predicted_scores(df_data: pd.DataFrame, actual_col: str, prediction_col
         ax_main.set_xlabel("Actual value")
         ax_main.set_ylabel("Predicted value")
         ax_main.set_title(f'Scatterplot of actual vs predicted value ({grouping_col}={group})')
-
+        
+        ax_main.set_xlim([min_val, max_val])
+        ax_main.set_ylim([min_val, max_val])
+        # Add a reference line (y = x) to indicate perfect predictions
+        ax_main.plot([min_val, max_val], [min_val, max_val], 'r--')
+        
         # Distribution plot for the x-axis (Actual value)
         ax_xdist = fig.add_subplot(gs[0, 0:3], sharex=ax_main)
         sns.kdeplot(x=df_group[actual_col], ax=ax_xdist, color='blue', fill=True)
