@@ -13,22 +13,7 @@ import pandas as pd
 import joblib
 import json
 import matplotlib.pyplot as plt
-
-def split_train_val(df, id_col, seq_col, val_ratio=0.2):
-    train_dfs = []
-    val_dfs = []
-
-    for _, group in df.groupby(id_col):
-        n_train_samples = max(1, round(len(group) * (1 - val_ratio)))
-        train_df = group.iloc[:n_train_samples]
-        val_df = group.iloc[n_train_samples:]
-        train_dfs.append(train_df)
-        val_dfs.append(val_df)
-
-    train_df = pd.concat(train_dfs).reset_index(drop=True)
-    val_df = pd.concat(val_dfs).reset_index(drop=True)
-
-    return train_df, val_df
+from src.dataset import split_train_val
 
 # Load dataset
 train_data = pd.read_csv(train_path).drop(columns=ignore_columns)
