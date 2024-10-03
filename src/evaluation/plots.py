@@ -1,6 +1,30 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
+
+def plot_feature_importance(model) -> Figure:
+    # Plot feature contributions for EBM
+    ebm_global = model.explain_global(name='EBM Feature Importances')
+
+    # Extracting feature names and their corresponding importances
+    feature_names = ebm_global.data()['names']
+    importances = ebm_global.data()['scores']
+
+    # Create a bar plot using Matplotlib
+    fig, ax = plt.subplots(figsize=(10, 20))
+    ax.barh(feature_names, importances)
+    ax.set_xlabel('Importance')
+    ax.set_ylabel('Feature')
+    ax.set_title('EBM Feature Importances')
+
+    plt.tight_layout()
+    return fig
+
 
 
 def pat_eval_plot(df_combined: pd.DataFrame, x_name: str, y_name: str) -> plt.Figure:

@@ -1,4 +1,3 @@
-import os
 import configparser
 import json
 # Load the configuration file
@@ -41,6 +40,8 @@ else:
 
 target_column_classification = config["data_classification"]["target_column"]
 
+id_column = config["general"]["id_column"]
+seq_column = config["general"]["seq_column"]
 # Load configuration from JSON file
 with open('feature_types.json', 'r', encoding="utf-8") as config_file:
     feature_types = json.load(config_file)
