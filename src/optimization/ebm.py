@@ -39,7 +39,8 @@ if __name__ == '__main__':
     create_model_directory(model_name, {
         f"{model_name}": "Optimization run of EBM models with varying parameters using Optuna",
         "Used Features": ", ".join(X_test.columns),
-        "Target": target_column
+        "Target": target_column,
+        "Dataset Name": train_path
     })
 
     model_path = f'./models/{model_name}'
