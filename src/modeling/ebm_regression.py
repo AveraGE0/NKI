@@ -1,5 +1,8 @@
 """Script to train a (unoptimized) ebm model. Can mainly be used for quick testing
 and for orientation when making new scripts"""
+import pandas as pd
+import joblib
+import json
 from interpret.glassbox import ExplainableBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from src.evaluation.adjusted_r2 import adjusted_r2_score
@@ -12,49 +15,33 @@ from src.config_loader import categorical_columns_regression as categorical_colu
 from src.config_loader import ignore_columns_regression as ignore_columns
 from src.config_loader import target_column_regression as target_column
 from src.config_loader import feature_types
-import pandas as pd
-import joblib
-import json
-from src.dataset import split_train_val
+from src.config_loader import id_column, seq_column
+from src.evaluation.plots import plot_feature_importance
+import matplotlib.pyplot as plt
+from src.dataset import load_data, split_data
 
 
-# Load dataset
-train_data = pd.read_csv(train_path).drop(columns=ignore_columns)
-test_data = pd.read_csv(test_path).drop(columns=ignore_columns)
-
-for col in categorical_columns:
-    train_data[col] = train_data[col].astype(str)
-    test_data[col] = test_data[col].astype(str)
-
-# Drop any unnamed columns in the DataFrame
-train_data = train_data.loc[:, ~train_data.columns.str.contains('^Unnamed')]
-train_full = train_data.copy()
-train_data, val_data = split_train_val(
-    train_data,
-    id_col='pat_id',
-    seq_col='week_identifier',
-    val_ratio=0.2
+df_train, df_val, df_test, train_ignore, val_ignore, test_ignore = load_data(
+    train_path=train_path,
+    test_path=test_path,
+    id_col=id_column,
+    seq_col=seq_column,
+    ignore_cols=ignore_columns,
+    categorical_cols=categorical_columns
 )
-test_data = test_data.loc[:, ~test_data.columns.str.contains('^Unnamed')]
 
-# Split into features and target
-X_train = train_data.drop(columns=[target_column])
-y_train = train_data[target_column]
-
-X_val = val_data.drop(columns=[target_column])
-y_val = val_data[target_column]
-
-X_train_full = train_full.drop(columns=[target_column])
-y_train_full = train_full[target_column]
-
-X_test = test_data.drop(columns=[target_column])
-y_test = test_data[target_column]
+(X_train, y_train), (X_val, y_val), (X_test, y_test) = split_data(
+    df_train,
+    df_val,
+    df_test,
+    target_col=target_column
+)
 
 # Create model directory
 model_name = unique_model_name("test_ebm")
 create_model_directory(model_name, {
     f"{model_name}": "Un-optimized EBM model with standard parameters",
-    "Parameters": ", ".join(X_test.columns)
+    "Used Features": ", ".join(X_test.columns)
 })
 
 # Create the model with the sampled hyperparameters
@@ -64,16 +51,15 @@ model = ExplainableBoostingRegressor(
     #min_samples_leaf=min_samples_leaf,
     #max_bins=max_bins,
     random_state=42,
-    feature_names = X_train_full.columns.tolist(),
-    feature_types=[feature_types[feature] if feature in feature_types.keys() else None for feature in X_train_full.columns.tolist()]
+    feature_names = X_train.columns.tolist(),
+    feature_types=[feature_types[feature] if feature in feature_types.keys() else None for feature in X_train.columns.tolist()]
 )
-# TODO check if this works
 
 model.fit(X_train, y_train)
 # save the parameters in the description
 add_description(
     f'./models/{model_name}/model_description.md',
-    headline="Parameters",
+    headline="Model Parameters",
     content='\n'.join(f'{key}: {value}' for key, value in model.get_params().items())
 )
 
@@ -122,29 +108,11 @@ for eval_set_name, X, y in [
     with open(f'./models/{model_name}/{eval_set_name}_metrics.json', 'w', encoding="utf-8") as f:
         json.dump(metrics, f)
 
-    # create group-wise plots
-    
-
-# Plot feature contributions for EBM
-from interpret import show
-import matplotlib.pyplot as plt
-
-ebm_global = model.explain_global(name='EBM Feature Importances')
-
-# Extracting feature names and their corresponding importances
-feature_names = ebm_global.data()['names']
-importances = ebm_global.data()['scores']
-
-# Create a bar plot using Matplotlib
-plt.figure(figsize=(10, 20))
-plt.barh(feature_names, importances)
-plt.xlabel('Importance')
-plt.ylabel('Feature')
-plt.title('EBM Feature Importances')
-plt.tight_layout()
-# Save the plot to a specific path
-plt.savefig(f'./models/{model_name}/ebm_feature_importances.png', dpi=300)
+# feature importance
+fig = plot_feature_importance(model)
+fig.savefig(f'./models/{model_name}/ebm_feature_importances.png', dpi=300)
 plt.close()
+
 
 with open(f'./models/{model_name}/train_within_patient.json', 'r', encoding="utf-8") as f:
     train = json.load(f)
